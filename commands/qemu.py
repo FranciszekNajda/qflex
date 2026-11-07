@@ -9,6 +9,7 @@ class QemuCommonArgParser:
         self.memory_size_mb = self.experiment_context.simulation_context.memory_gb * 1024
         self.cores = self.experiment_context.simulation_context.core_count
         self.double_cores = self.experiment_context.simulation_context.doubled_vcpu
+        self.cpu_model = self.experiment_context.simulation_context.cpu_model
         self.core_coeff = 1
         if self.double_cores:
             self.core_coeff = 2
@@ -46,7 +47,7 @@ class QemuCommonArgParser:
 
         qemu_args = f""" -M virt,gic-version=max,virtualization=off,secure=off \
         -smp {self.core_coeff * self.cores} \
-        -cpu max,pauth=off -m {self.memory_size_mb} \
+        -cpu {self.cpu_model} -m {self.memory_size_mb} \
         -boot order=d,menu=on \
         -bios ./QEMU_EFI.fd \
         -drive if=virtio,file={self.image_address},format=qcow2 \

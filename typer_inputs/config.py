@@ -79,6 +79,9 @@ class ExperimentContextTyper(TyperDataClassMeta):
         refresh_wormcache: Annotated[bool, typer.Option(
             help="Whether to refresh WormCacheQFlex in the experiment folder."
         )]=False,
+        cpu_model: Annotated[str, typer.Option(
+            help="Value of QEMU's -cpu option, e.g. max,pauth=off or neoverse-n1,id-overrides=<file>."
+        )]="max,pauth=off",
     ):
         print("quantum_size_ns:", quantum_size_ns)
         if unique:
@@ -115,6 +118,7 @@ class ExperimentContextTyper(TyperDataClassMeta):
             use_cd_rom=use_cd_rom,
             machine_freq_ghz=machine_freq_ghz,
             include_affinity=include_affinity,
-            refresh_wormcache=refresh_wormcache
+            refresh_wormcache=refresh_wormcache,
+            cpu_model=cpu_model,
         )
         return experiment_context
