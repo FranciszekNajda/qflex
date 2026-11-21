@@ -8,7 +8,7 @@ class Boot(Executor):
     def __init__(self, 
                  experiment_context: ExperimentContext):
         self.experiment_context = experiment_context
-        self.qemu_common_parser = QemuCommonArgParser(experiment_context)
+        self.qemu_common_parser = QemuCommonArgParser(experiment_context, is_boot=True)
 
     def cmd(self) -> str:
         

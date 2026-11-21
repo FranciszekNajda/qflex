@@ -5,6 +5,7 @@ import pandas
 
 from .host import Host, SMTHost, HOSTS, HostType
 from .workload import Workload, create_workload
+from . import gem5_profile
 import datetime
 
 # TODO double check all the parameters and their descriptions
@@ -46,6 +47,7 @@ class SimulationContext(BaseModel):
     check_period_quantum_coeff: float = Field(default=53.0, description="Coefficient to determine the check period based on quantum size")
     use_cd_rom: bool = Field(default=False, description="Whether to use a CD-ROM for initial setup.")
     cpu_model: str = Field(default="max,pauth=off", description="Value of QEMU's -cpu option (model and properties)")
+    gem5: bool = Field(default=False, description="Whether the gem5 profile (commands/gem5_profile.py) is applied")
 
 def create_simulation_context(
     core_count: int,
@@ -58,6 +60,7 @@ def create_simulation_context(
     check_period_quantum_coeff: float=53.0,
     use_cd_rom: bool=False,
     cpu_model: str="max,pauth=off",
+    gem5: bool=False,
 ) -> SimulationContext:
     l2_way = 16
     if core_count == 64:
@@ -72,6 +75,10 @@ def create_simulation_context(
         memory_controller_positions = "0"
     else:
         raise ValueError("Unsupported core count")
+
+    # --gem5 replaces, in memory, the qflex.args choices that gem5 constrains.
+    if gem5:
+        cpu_model, network = gem5_profile.apply(cpu_model, network)
 
     if 'none' == network.strip().lower():
         network = "-nic none"
@@ -95,6 +102,7 @@ def create_simulation_context(
         check_period_quantum_coeff=check_period_quantum_coeff,
         use_cd_rom=use_cd_rom,
         cpu_model=cpu_model,
+        gem5=gem5,
     )
 
 class IPNSInfo(BaseModel):
@@ -368,6 +376,7 @@ def create_experiment_context(
     include_affinity: bool = False,
     refresh_wormcache: bool = False,
     cpu_model: str = "max,pauth=off",
+    gem5: bool = False,
 ) -> ExperimentContext:
     # assert False
     # TODO add how to create experiment name
@@ -410,6 +419,7 @@ def create_experiment_context(
         check_period_quantum_coeff=check_period_quantum_coeff,
         use_cd_rom=use_cd_rom,
         cpu_model=cpu_model,
+        gem5=gem5,
     )
 
     if host_name.upper() not in HostType.__members__.keys():

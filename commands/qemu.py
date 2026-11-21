@@ -1,8 +1,9 @@
 import os
 from commands.config import ExperimentContext
+from commands import gem5_profile
 
 class QemuCommonArgParser:
-    def __init__(self, experiment_context: ExperimentContext):
+    def __init__(self, experiment_context: ExperimentContext, is_boot: bool = False):
         self.experiment_context = experiment_context
         self.simulation_context = self.experiment_context.simulation_context
         self.image_address = self.experiment_context.get_local_image_address()
@@ -39,18 +40,29 @@ class QemuCommonArgParser:
                 alpine_url = f'https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/aarch64/{alpine_image_name}'
                 os.system(f'wget {alpine_url} -O {experiment_folder}/images/{alpine_image_name}')
             self.cd_rom = f'-cdrom {experiment_folder}/images/{alpine_image_name} '
+
+        # QEMU options constrained by --gem5 (commands/gem5_profile.py).
+        # Without --gem5, these are the original values.
+        self.gem5 = self.simulation_context.gem5
+        self.machine = gem5_profile.machine_args(
+            self.gem5, "virt,gic-version=max,virtualization=off,secure=off")
+        self.disk_command = (
+            f"-drive {gem5_profile.disk_interface(self.gem5)},"
+            f"file={self.image_address},format=qcow2 "
+            f"{gem5_profile.disk_device(self.gem5)}")
+        gem5_profile.check_marker(self.gem5, self.image_address, is_boot)
         
 
 
         
     def get_qemu_base_args(self) -> str:
 
-        qemu_args = f""" -M virt,gic-version=max,virtualization=off,secure=off \
+        qemu_args = f""" -M {self.machine} \
         -smp {self.core_coeff * self.cores} \
         -cpu {self.cpu_model} -m {self.memory_size_mb} \
         -boot order=d,menu=on \
         -bios ./QEMU_EFI.fd \
-        -drive if=virtio,file={self.image_address},format=qcow2 \
+        {self.disk_command} \
         {self.nic_command} \
         -rtc clock=vm \
         {self.loadvm} \

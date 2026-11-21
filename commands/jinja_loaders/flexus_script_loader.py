@@ -20,6 +20,12 @@ class FlexusScriptLoader(ParameterLoader):
         return result
 
     def get_context(self):
+        if self.experiment_context.simulation_context.gem5:
+            raise NotImplementedError(
+                "--gem5 is not supported for the timing simulation yet: "
+                "run_flexus.sh uses vanilla QEMU, which has no id-overrides, "
+                "so it cannot load snapshots taken with --gem5. "
+                "Convert the snapshots to gem5 checkpoints instead.")
         return {
             # TODO add some check to make sure this core_count is not the doubled version as that is being sent in as a separate parameter
             "CORE_COUNT": self.experiment_context.simulation_context.core_count,

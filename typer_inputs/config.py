@@ -82,6 +82,9 @@ class ExperimentContextTyper(TyperDataClassMeta):
         cpu_model: Annotated[str, typer.Option(
             help="Value of QEMU's -cpu option, e.g. max,pauth=off or neoverse-n1,id-overrides=<file>."
         )]="max,pauth=off",
+        gem5: Annotated[bool, typer.Option(
+            help="Make QEMU's snapshots convertible into gem5 checkpoints (see commands/gem5_profile.py). Must be given to every step."
+        )]=False,
     ):
         print("quantum_size_ns:", quantum_size_ns)
         if unique:
@@ -120,5 +123,6 @@ class ExperimentContextTyper(TyperDataClassMeta):
             include_affinity=include_affinity,
             refresh_wormcache=refresh_wormcache,
             cpu_model=cpu_model,
+            gem5=gem5,
         )
         return experiment_context
