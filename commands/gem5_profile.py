@@ -9,8 +9,9 @@ can rebuild. This file is the single place where those choices are made:
   * CPU      : "max" with the ID-register overrides that make QEMU report
                the features gem5 implements, without pointer
                authentication, without PMU (gem5's platform has none).
-  * GIC      : GICv3 without ITS. The legacy virtio-pci disk uses INTx
-               wires, so no MSI/LPI is needed, and gem5's restore has no ITS.
+  * GIC      : GICv3. The ITS is kept (Linux panics at boot without it),
+               but stays unused: the legacy virtio-pci disk uses INTx wires
+               and there is no NIC, so no device sends MSIs/LPIs.
   * Disk     : legacy virtio-blk-pci (gem5's PciVirtIO only implements the
                legacy interface), with every optional feature that gem5's
                VirtIOBlock does not implement turned off.
@@ -43,9 +44,12 @@ CPU_MODEL = f"max,pauth=off,pmu=off,id-overrides={ID_OVERRIDES}"
 NETWORK = "none"
 
 # Same as the default machine (commands/qemu.py), except:
-#   gic-version=3 : explicit, convert.py only accepts a GICv3 (revision 3);
-#   its=off       : no ITS, see the module docstring.
-MACHINE = "virt,gic-version=3,its=off,virtualization=off,secure=off"
+#   gic-version=3 : explicit, convert.py only accepts a GICv3 (revision 3).
+# The ITS is kept: Linux panics early when booted without it ("Attempted to
+# kill the idle task", tested with its=off). No device sends MSIs (the disk
+# has vectors=0 and there is no NIC), so the ITS stays unused and gem5's
+# restore needs none; convert.py checks that no LPI is pending.
+MACHINE = "virt,gic-version=3,virtualization=off,secure=off"
 
 # Legacy virtio-blk-pci, matching gem5's PciVirtIO + VirtIOBlock:
 #   disable-legacy=off,disable-modern=on : legacy interface only (I/O BAR0);
